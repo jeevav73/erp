@@ -1,0 +1,36 @@
+{
+  "name": "digital-agency-erp",
+  "version": "1.0.0",
+  "description": "Digital Agency ERP System - Full-stack application",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ..",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm start",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend:build": "cd backend && npm run build",
+    "frontend:build": "cd frontend && npm run build",
+    "init-db": "cd backend && npm run init-db"
+  },
+  "keywords": [
+    "erp",
+    "express",
+    "react",
+    "sqlite",
+    "jwt"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "dependencies": {
+    "axios": "^1.13.6",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "jsonwebtoken": "^9.0.3",
+    "openai": "^6.32.0",
+    "sqlite3": "^6.0.1"
+  }
+}
