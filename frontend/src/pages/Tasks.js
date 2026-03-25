@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { taskService, projectService } from '../services/apiServices';
+import { useAuth } from '../context/AuthContext';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { formatDate, getPriorityColor } from '../utils/helpers';
 
@@ -106,6 +107,19 @@ const TaskModal = ({ isOpen, task, projects, onClose, onSave, loading }) => {
           </div>
 
           <div>
+            <label className="block text-gray-700 font-semibold mb-2">Assign To</label>
+            <select
+              value={formData.assigned_to}
+              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            >
+              <option value="">Select employee</option>
+              <option value="2">Employee One (employee1@erp.com)</option>
+              <option value="3">Employee Two (employee2@erp.com)</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-gray-700 font-semibold mb-2">Due Date</label>
             <input
               type="date"
@@ -137,17 +151,29 @@ const TaskModal = ({ isOpen, task, projects, onClose, onSave, loading }) => {
   );
 };
 
-const TaskCard = ({ task, onEdit, onDelete }) => (
+const TaskCard = ({ task, onEdit, onDelete, user, onStatusChange }) => (
   <div className="bg-white rounded-lg shadow p-4 mb-3 cursor-pointer hover:shadow-md transition">
     <div className="flex justify-between items-start mb-2">
       <h4 className="font-semibold text-gray-800">{task.title}</h4>
       <div className="flex gap-1">
-        <button onClick={() => onEdit(task)} className="p-1 text-blue-600 hover:bg-blue-100 rounded">
-          <Edit2 size={14} />
-        </button>
-        <button onClick={() => onDelete(task.id)} className="p-1 text-red-600 hover:bg-red-100 rounded">
-          <Trash2 size={14} />
-        </button>
+        {user && user.role === 'Employee' ? (
+          task.assigned_to === user.id ? (
+            <select value={task.status} onChange={(e) => onStatusChange(task, e.target.value)} className="px-2 py-1 border rounded">
+              <option>To Do</option>
+              <option>In Progress</option>
+              <option>Completed</option>
+            </select>
+          ) : null
+        ) : (
+          <>
+            <button onClick={() => onEdit(task)} className="p-1 text-blue-600 hover:bg-blue-100 rounded">
+              <Edit2 size={14} />
+            </button>
+            <button onClick={() => onDelete(task.id)} className="p-1 text-red-600 hover:bg-red-100 rounded">
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
       </div>
     </div>
     <p className="text-xs text-gray-600 mb-2">{task.project_title}</p>
@@ -162,6 +188,7 @@ const TaskCard = ({ task, onEdit, onDelete }) => (
 );
 
 export default function Tasks() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -178,10 +205,13 @@ export default function Tasks() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [tasksRes, projectsRes] = await Promise.all([
-        taskService.getTasks(),
-        projectService.getProjects()
-      ]);
+      const projectsRes = await projectService.getProjects();
+      let tasksRes;
+      if (user && user.role === 'Employee') {
+        tasksRes = await taskService.getTasksByUser(user.id);
+      } else {
+        tasksRes = await taskService.getTasks();
+      }
       setTasks(tasksRes.data.data || []);
       setProjects(projectsRes.data.data || []);
     } catch (err) {
@@ -235,7 +265,7 @@ export default function Tasks() {
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Tasks</h1>
-        <div className="flex gap-4">
+          <div className="flex gap-4">
           <button
             onClick={() => setViewType('kanban')}
             className={`px-4 py-2 rounded-lg font-semibold ${
@@ -252,15 +282,17 @@ export default function Tasks() {
           >
             List
           </button>
-          <button
-            onClick={() => {
-              setSelectedTask(null);
-              setModalOpen(true);
-            }}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg"
-          >
-            <Plus size={20} /> Add Task
-          </button>
+          { !(user && user.role === 'Employee') && (
+            <button
+              onClick={() => {
+                setSelectedTask(null);
+                setModalOpen(true);
+              }}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              <Plus size={20} /> Add Task
+            </button>
+          )}
         </div>
       </div>
 
@@ -278,11 +310,20 @@ export default function Tasks() {
                   <TaskCard
                     key={task.id}
                     task={task}
+                    user={user}
                     onEdit={(t) => {
                       setSelectedTask(t);
                       setModalOpen(true);
                     }}
                     onDelete={handleDeleteTask}
+                    onStatusChange={async (taskItem, newStatus) => {
+                      try {
+                        await taskService.updateTask(taskItem.id, { status: newStatus });
+                        await fetchData();
+                      } catch (err) {
+                        console.error('Failed to update status', err);
+                      }
+                    }}
                   />
                 ))}
               </div>

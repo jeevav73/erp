@@ -10,7 +10,6 @@ export default function AITools() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {

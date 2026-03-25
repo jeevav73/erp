@@ -1,11 +1,15 @@
-const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { runQuery, allQuery } = require('../database/connection');
 
 class AIService {
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && process.env.DEMO_MODE !== 'true') {
+      this.genai = new GoogleGenerativeAI(apiKey);
+      // Use gemini-pro by default (most stable). Can be overridden with GEMINI_MODEL env var
+      const modelName = process.env.GEMINI_MODEL || 'gemini-pro';
+      this.model = this.genai.getGenerativeModel({ model: modelName });
+    }
   }
 
   async generateContent(topic, contentType, userId) {
@@ -25,26 +29,50 @@ class AIService {
     };
 
     try {
-      const message = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: prompts[contentType]
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.7
-      });
-
-      const generatedContent = message.choices[0].message.content;
+      let generatedContent;
+      
+      // If Gemini API key is not set or demo mode is enabled, use mock content
+      if (!process.env.GEMINI_API_KEY || process.env.DEMO_MODE === 'true') {
+        generatedContent = this.getMockContent(topic, contentType);
+      } else {
+        const result = await this.model.generateContent(prompts[contentType]);
+        generatedContent = result.response.text();
+      }
 
       // Save to database
       const query = `
         INSERT INTO ai_content (topic, content_type, generated_content, created_by)
         VALUES (?, ?, ?, ?)
       `;
-      await runQuery(query, [topic, contentType, generatedContent, userId || null]);
+      const result = await runQuery(query, [topic, contentType, generatedContent, userId || null]);
+      const aiContentId = result.id;
+
+      // Also create a content_production entry (workflow) and a contributions record
+      try {
+        await runQuery(`
+          INSERT INTO content_production
+            (title, ai_content_id, content_type, body, created_by, status)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [topic, aiContentId, contentType, generatedContent, userId || null, 'Draft']);
+
+        await runQuery(`
+          INSERT INTO contributions
+            (title, description, contribution_type, source, ai_generated, ai_content_id, created_by, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          `${contentType} - ${topic}`,
+          generatedContent.substring(0, 100),
+          contentType,
+          'Content',
+          1,
+          aiContentId,
+          userId || null,
+          'Draft'
+        ]);
+      } catch (err) {
+        // If additional inserts fail, log but don't prevent returning generated content
+        console.error('Failed to create content_production/contribution records:', err.message);
+      }
 
       return {
         topic,
@@ -52,8 +80,24 @@ class AIService {
         generated_content: generatedContent
       };
     } catch (error) {
+      if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED')) {
+        throw new Error('Gemini API quota exceeded. Please check your plan at https://makersuite.google.com/app/apikey or set DEMO_MODE=true in .env');
+      }
+      if (error.message.includes('404') || error.message.includes('not found') || error.message.includes('not supported')) {
+        const modelName = process.env.GEMINI_MODEL || 'gemini-pro';
+        throw new Error(`Gemini model "${modelName}" not found or not supported. Try setting GEMINI_MODEL=gemini-pro in .env or enable DEMO_MODE=true`);
+      }
       throw new Error(`Failed to generate content: ${error.message}`);
     }
+  }
+
+  getMockContent(topic, contentType) {
+    const mocks = {
+      'Social Media': `🚀 Exciting news about ${topic}! Don't miss out on this game-changing opportunity. Learn more today! 💡 #innovation #${topic.replace(/\s+/g, '')}`,
+      'Blog': `Understanding ${topic} in 2024\n\nIn today's fast-paced world, ${topic} has become increasingly important. This comprehensive guide explores the key aspects and benefits.\n\nWhether you're new to ${topic} or looking to deepen your knowledge, we'll cover everything you need to know about this transformative topic.`,
+      'Email': `Subject: 📢 Discover the Power of ${topic} Today!\n\nPreview: Learn how ${topic} can revolutionize your business and drive real results. Get exclusive insights, expert tips, and proven strategies...`
+    };
+    return mocks[contentType] || `Generated content about: ${topic}`;
   }
 
   async getContentHistory(userId) {

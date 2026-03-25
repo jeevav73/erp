@@ -55,6 +55,35 @@ class DashboardController {
       return sendError(res, 500, error.message);
     }
   }
+
+  static async getContributionStats(req, res) {
+    try {
+      const stats = await DashboardService.getContributionStats();
+      return sendResponse(res, 200, stats, 'Contribution stats retrieved successfully');
+    } catch (error) {
+      return sendError(res, 500, error.message);
+    }
+  }
+
+  static async getContentCounts(req, res) {
+    try {
+      const counts = await DashboardService.getContentCounts();
+      return sendResponse(res, 200, counts, 'Content counts retrieved successfully');
+    } catch (error) {
+      return sendError(res, 500, error.message);
+    }
+  }
+
+  static async getCampaignKPIs(req, res) {
+    try {
+      const { from, to } = req.query;
+      const campaignId = req.params.campaignId;
+      const kpi = await DashboardService.getCampaignKPIs(campaignId, from, to);
+      return sendResponse(res, 200, kpi, 'Campaign KPI retrieved successfully');
+    } catch (error) {
+      return sendError(res, 500, error.message);
+    }
+  }
 }
 
 module.exports = DashboardController;

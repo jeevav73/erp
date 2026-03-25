@@ -15,6 +15,10 @@ class AIController {
       const result = await aiService.generateContent(topic, content_type, userId);
       return sendResponse(res, 200, result, 'Content generated successfully');
     } catch (error) {
+      // Check for Gemini API quota errors
+      if (error.message.includes('quota') || error.message.includes('429') || error.message.includes('RESOURCE_EXHAUSTED')) {
+        return sendError(res, 429, error.message);
+      }
       return sendError(res, error.message.includes('Invalid content type') ? 400 : 500, error.message);
     }
   }

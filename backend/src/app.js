@@ -9,6 +9,11 @@ const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const contentRoutes = require('./routes/contentRoutes');
+const marketingRoutes = require('./routes/marketingRoutes');
+const contentProductionRoutes = require('./routes/contentProductionRoutes');
+const marketingMetricsRoutes = require('./routes/marketingMetricsRoutes');
+const contributionRoutes = require('./routes/contributionRoutes');
 
 const app = express();
 
@@ -32,6 +37,11 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/marketing', marketingRoutes);
+app.use('/api/contributions', contributionRoutes);
+app.use('/api/content-production', contentProductionRoutes);
+app.use('/api/marketing-metrics', marketingMetricsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

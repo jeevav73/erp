@@ -25,11 +25,29 @@ export default function Navbar() {
           {user && (
             <div className="hidden md:flex items-center gap-6">
               <Link to="/dashboard" className="hover:text-indigo-200">Dashboard</Link>
-              <Link to="/clients" className="hover:text-indigo-200">Clients</Link>
-              <Link to="/projects" className="hover:text-indigo-200">Projects</Link>
-              <Link to="/tasks" className="hover:text-indigo-200">Tasks</Link>
-              <Link to="/ai-tools" className="hover:text-indigo-200">AI Tools</Link>
-              
+              { (user.role === 'Admin' || user.role === 'Manager') && (
+                <>
+                  <Link to="/clients" className="hover:text-indigo-200">Clients</Link>
+                  <Link to="/projects" className="hover:text-indigo-200">Projects</Link>
+                  <Link to="/tasks" className="hover:text-indigo-200">Tasks</Link>
+                  <Link to="/ai-tools" className="hover:text-indigo-200">AI Tools</Link>
+                  <Link to="/content-production" className="hover:text-indigo-200">Content</Link>
+                  <Link to="/marketing-performance" className="hover:text-indigo-200">Marketing</Link>
+                  <Link to="/marketing-metrics" className="hover:text-indigo-200">Metrics</Link>
+                </>
+              )}
+              { user.role === 'Employee' && (
+                <>
+                  <Link to="/employee" className="hover:text-indigo-200">My Portal</Link>
+                  <Link to="/tasks" className="hover:text-indigo-200">Tasks</Link>
+                </>
+              )}
+              { user.role === 'Admin' && (
+                <>
+                  <Link to="/admin" className="hover:text-indigo-200">All Tasks</Link>
+                </>
+              )}
+
               <div className="flex items-center gap-4 pl-6 border-l border-indigo-400">
                 <span className="text-sm">{user.name} ({user.role})</span>
                 <button
@@ -55,10 +73,29 @@ export default function Navbar() {
         {mobileMenuOpen && user && (
           <div className="md:hidden pb-4 flex flex-col gap-2">
             <Link to="/dashboard" className="block hover:text-indigo-200 py-2">Dashboard</Link>
-            <Link to="/clients" className="block hover:text-indigo-200 py-2">Clients</Link>
-            <Link to="/projects" className="block hover:text-indigo-200 py-2">Projects</Link>
-            <Link to="/tasks" className="block hover:text-indigo-200 py-2">Tasks</Link>
-            <Link to="/ai-tools" className="block hover:text-indigo-200 py-2">AI Tools</Link>
+              { (user.role === 'Admin') && (
+              <>
+                <Link to="/admin" className="block hover:text-indigo-200 py-2">All Tasks</Link>
+                <Link to="/clients" className="block hover:text-indigo-200 py-2">Clients</Link>
+              </>
+            )}
+              { (user.role === 'Manager') && (
+              <>
+                <Link to="/clients" className="block hover:text-indigo-200 py-2">Clients</Link>
+                <Link to="/projects" className="block hover:text-indigo-200 py-2">Projects</Link>
+                <Link to="/tasks" className="block hover:text-indigo-200 py-2">Tasks</Link>
+                <Link to="/ai-tools" className="block hover:text-indigo-200 py-2">AI Tools</Link>
+                <Link to="/content-production" className="block hover:text-indigo-200 py-2">Content</Link>
+                <Link to="/marketing-performance" className="block hover:text-indigo-200 py-2">Marketing</Link>
+                <Link to="/marketing-metrics" className="block hover:text-indigo-200 py-2">Metrics</Link>
+              </>
+            )}
+            { user.role === 'Employee' && (
+              <>
+                <Link to="/employee" className="block hover:text-indigo-200 py-2">My Portal</Link>
+                <Link to="/tasks" className="block hover:text-indigo-200 py-2">Tasks</Link>
+              </>
+            )}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 bg-red-500 hover:bg-red-600 px-3 py-2 rounded w-full justify-center"

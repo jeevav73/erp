@@ -49,6 +49,10 @@ class TaskController {
   static async getTasksByUser(req, res) {
     try {
       const { userId } = req.params;
+      // If caller is Employee, ensure they can only request their own tasks
+      if (req.user.role === 'Employee' && Number(userId) !== Number(req.user.id)) {
+        return sendError(res, 403, 'Employees can only view their own tasks');
+      }
       const tasks = await TaskService.getTasksByAssignedTo(userId);
       return sendResponse(res, 200, tasks, 'Tasks retrieved successfully');
     } catch (error) {
@@ -76,6 +80,18 @@ class TaskController {
 
       if (!title) {
         return sendError(res, 400, 'Title is required');
+      }
+      // Employees may only update status of tasks assigned to them
+      const existing = await TaskService.getTaskById(id);
+      if (!existing) return sendError(res, 404, 'Task not found');
+      if (req.user.role === 'Employee') {
+        if (Number(existing.assigned_to) !== Number(req.user.id)) {
+          return sendError(res, 403, 'Employees can only update their own tasks');
+        }
+        // Only allow status update for employees
+        const allowedStatus = status || existing.status;
+        const result = await TaskService.updateTask(id, existing.assigned_to, existing.title, existing.description, allowedStatus, existing.priority, existing.due_date);
+        return sendResponse(res, 200, result, 'Task updated successfully');
       }
 
       const result = await TaskService.updateTask(id, assigned_to, title, description, status, priority, due_date);

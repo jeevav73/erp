@@ -115,6 +115,68 @@ class DashboardService {
       throw new Error(`Failed to fetch project timeline: ${error.message}`);
     }
   }
+
+  static async getContributionStats() {
+    try {
+      const stats = await allQuery(`
+        SELECT status, COUNT(*) as count
+        FROM contributions
+        GROUP BY status
+      `);
+      return stats;
+    } catch (error) {
+      throw new Error(`Failed to fetch contribution stats: ${error.message}`);
+    }
+  }
+
+  static async getContentCounts() {
+    try {
+      const aiCounts = await allQuery(`
+        SELECT content_type, COUNT(*) as count
+        FROM ai_content
+        GROUP BY content_type
+      `);
+
+      const productionCounts = await allQuery(`
+        SELECT content_type, COUNT(*) as count
+        FROM content_production
+        GROUP BY content_type
+      `);
+
+      return { ai_counts: aiCounts, production_counts: productionCounts };
+    } catch (error) {
+      throw new Error(`Failed to fetch content counts: ${error.message}`);
+    }
+  }
+
+  static async getCampaignKPIs(campaignId, from, to) {
+    try {
+      const params = [campaignId];
+      let dateFilter = '';
+      if (from && to) {
+        dateFilter = ' AND metric_date BETWEEN ? AND ?';
+        params.push(from, to);
+      }
+
+      const q = `
+        SELECT mc.id, mc.campaign_name,
+          SUM(mpm.impressions) AS impressions,
+          SUM(mpm.clicks) AS clicks,
+          SUM(mpm.conversions) AS conversions,
+          SUM(mpm.leads) AS leads,
+          SUM(mpm.spend) AS spend,
+          AVG(mpm.roi) AS avg_roi
+        FROM marketing_campaigns mc
+        LEFT JOIN marketing_performance_metrics mpm ON mpm.campaign_id = mc.id ${dateFilter}
+        WHERE mc.id = ?
+        GROUP BY mc.id, mc.campaign_name
+      `;
+      const rows = await allQuery(q, params);
+      return rows[0] || null;
+    } catch (error) {
+      throw new Error(`Failed to fetch campaign KPIs: ${error.message}`);
+    }
+  }
 }
 
 module.exports = DashboardService;

@@ -110,3 +110,83 @@ export const dashboardService = {
   getProjectTimeline: () =>
     api.get('/dashboard/project-timeline')
 };
+
+export const contentService = {
+  createContent: (data) =>
+    api.post('/content', data),
+
+  getAllContent: () =>
+    api.get('/content'),
+
+  getContent: (id) =>
+    api.get(`/content/${id}`),
+
+  getContentByType: (contentType) =>
+    api.get(`/content/type/${contentType}`),
+
+  searchContent: (query) =>
+    api.get('/content/search', { params: { q: query } }),
+
+  getContentStats: () =>
+    api.get('/content/stats'),
+
+  deleteContent: (id) =>
+    api.delete(`/content/${id}`)
+};
+
+export const marketingService = {
+  createCampaign: (data) =>
+    api.post('/marketing', data),
+
+  getAllCampaigns: () =>
+    api.get('/marketing'),
+
+  getCampaign: (id) =>
+    api.get(`/marketing/${id}`),
+
+  updateCampaign: (id, data) =>
+    api.put(`/marketing/${id}`, data),
+
+  addPerformanceMetric: (campaignId, data) =>
+    api.post(`/marketing/${campaignId}/performance`, data),
+
+  getCampaignPerformance: (id) =>
+    api.get(`/marketing/${id}/performance`),
+
+  getMarketingStats: () =>
+    api.get('/marketing/stats'),
+
+  deleteCampaign: (id) =>
+    api.delete(`/marketing/${id}`)
+};
+
+export const contributionService = {
+  createContribution: (data) =>
+    api.post('/contributions', data),
+
+  getAllContributions: () =>
+    api.get('/contributions'),
+
+  getContribution: (id) =>
+    api.get(`/contributions/${id}`),
+
+  updateContribution: (id, data) =>
+    api.put(`/contributions/${id}`, data),
+
+  deleteContribution: (id) =>
+    api.delete(`/contributions/${id}`)
+};
+
+export const contentProductionService = {
+  create: (data) => api.post('/content-production', data),
+  list: () => api.get('/content-production'),
+  get: (id) => api.get(`/content-production/${id}`),
+  update: (id, data) => api.put(`/content-production/${id}`, data),
+  remove: (id) => api.delete(`/content-production/${id}`)
+};
+
+export const marketingMetricsService = {
+  insertMetric: (data) => api.post('/marketing-metrics', data),
+  getByCampaign: (campaignId, params) => api.get(`/marketing-metrics/campaign/${campaignId}`, { params }),
+  aggregate: (campaignId, params) => api.get(`/marketing-metrics/campaign/${campaignId}/aggregate`, { params })
+};

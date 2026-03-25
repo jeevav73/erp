@@ -9,6 +9,12 @@ import Clients from './pages/Clients';
 import Projects from './pages/Projects';
 import Tasks from './pages/Tasks';
 import AITools from './pages/AITools';
+import ContentProduction from './pages/ContentProduction';
+import MarketingPerformance from './pages/MarketingPerformance';
+import MarketingMetricsManager from './pages/MarketingMetricsManager';
+import AdminPortal from './pages/AdminPortal';
+import ManagerPortal from './pages/ManagerPortal';
+import EmployeePortal from './pages/EmployeePortal';
 import './App.css';
 
 function App() {
@@ -47,6 +53,42 @@ function App() {
             <Route path="/ai-tools" element={
               <ProtectedRoute>
                 <AITools />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/content-production" element={
+              <ProtectedRoute>
+                <ContentProduction />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/marketing-performance" element={
+              <ProtectedRoute>
+                <MarketingPerformance />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/marketing-metrics" element={
+              <ProtectedRoute>
+                <MarketingMetricsManager />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminPortal />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/manager" element={
+              <ProtectedRoute>
+                <ManagerPortal />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/employee" element={
+              <ProtectedRoute>
+                <EmployeePortal />
               </ProtectedRoute>
             } />
 

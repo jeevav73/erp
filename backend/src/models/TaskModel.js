@@ -44,8 +44,9 @@ class TaskModel {
 
   static async findByAssignedTo(userId) {
     const query = `
-      SELECT t.*, p.title as project_title
+      SELECT t.*, u.name as assigned_to_name, p.title as project_title
       FROM tasks t
+      LEFT JOIN users u ON t.assigned_to = u.id
       LEFT JOIN projects p ON t.project_id = p.id
       WHERE t.assigned_to = ?
       ORDER BY t.created_at DESC
