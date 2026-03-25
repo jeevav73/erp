@@ -73,33 +73,45 @@ class TaskController {
     }
   }
 
-  static async updateTask(req, res) {
-    try {
-      const { id } = req.params;
-      const { assigned_to, title, description, status, priority, due_date } = req.body;
+static async updateTask(req, res) {
+  try {
+    const { id } = req.params;
+    // Request body-la irundhu vara values
+    const { assigned_to, title, description, status, priority, due_date } = req.body;
 
-      if (!title) {
-        return sendError(res, 400, 'Title is required');
-      }
-      // Employees may only update status of tasks assigned to them
-      const existing = await TaskService.getTaskById(id);
-      if (!existing) return sendError(res, 404, 'Task not found');
-      if (req.user.role === 'Employee') {
-        if (Number(existing.assigned_to) !== Number(req.user.id)) {
-          return sendError(res, 403, 'Employees can only update their own tasks');
-        }
-        // Only allow status update for employees
-        const allowedStatus = status || existing.status;
-        const result = await TaskService.updateTask(id, existing.assigned_to, existing.title, existing.description, allowedStatus, existing.priority, existing.due_date);
-        return sendResponse(res, 200, result, 'Task updated successfully');
-      }
+    // 1. Modhala database-la irukqa current task details-ah edunga
+    const existing = await TaskService.getTaskById(id);
+    if (!existing) return sendError(res, 404, 'Task not found');
 
-      const result = await TaskService.updateTask(id, assigned_to, title, description, status, priority, due_date);
-      return sendResponse(res, 200, result, 'Task updated successfully');
-    } catch (error) {
-      return sendError(res, error.message === 'Task not found' ? 404 : 500, error.message);
+    // 2. Employee check (Already neenga pottadhudhaan)
+    if (req.user.role === 'Employee' && Number(existing.assigned_to) !== Number(req.user.id)) {
+      return sendError(res, 403, 'Employees can only update their own tasks');
     }
+
+    // 3. IMPORTANT: Title or other fields varalana, DB-la irukqa palaiya values-aye eduthuko nu solrom
+    const final_title = title || existing.title;
+    const final_assigned = assigned_to || existing.assigned_to;
+    const final_desc = description || existing.description;
+    const final_status = status || existing.status;
+    const final_priority = priority || existing.priority;
+    const final_due = due_date || existing.due_date;
+
+    // 4. Ippo update pannunga
+    const result = await TaskService.updateTask(
+      id, 
+      final_assigned, 
+      final_title, 
+      final_desc, 
+      final_status, 
+      final_priority, 
+      final_due
+    );
+
+    return sendResponse(res, 200, result, 'Task updated successfully');
+  } catch (error) {
+    return sendError(res, 500, error.message);
   }
+}
 
   static async deleteTask(req, res) {
     try {

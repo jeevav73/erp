@@ -5,31 +5,33 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { formatDate, getPriorityColor } from '../utils/helpers';
 
 const TaskModal = ({ isOpen, task, projects, onClose, onSave, loading }) => {
-  const [formData, setFormData] = useState({
-    project_id: '',
-    title: '',
-    description: '',
-    assigned_to: '',
-    status: 'To Do',
-    priority: 'Medium',
-    due_date: ''
-  });
-
-  useEffect(() => {
-    if (task) {
-      setFormData(task);
-    } else {
-      setFormData({
-        project_id: '',
-        title: '',
-        description: '',
-        assigned_to: '',
-        status: 'To Do',
-        priority: 'Medium',
-        due_date: ''
-      });
-    }
-  }, [task, isOpen]);
+  // INDHA LINE-AH ADD PANNUNGA:
+  const [formData, setFormData] = useState({ project_id: '', title: '', description: '', assigned_to: '', status: 'To Do', priority: 'Medium', due_date: '' });
+useEffect(() => {
+  if (task) {
+    // Database-la irundhu vara null values-ah empty string-ah mathi state-la veikrom
+    setFormData({
+      project_id: task.project_id || '',
+      title: task.title || '',
+      description: task.description || '',
+      assigned_to: task.assigned_to || '',
+      status: task.status || 'To Do',
+      priority: task.priority || 'Medium',
+      due_date: task.due_date || ''
+    });
+  } else {
+    // Reset state for new task
+    setFormData({
+      project_id: '',
+      title: '',
+      description: '',
+      assigned_to: '',
+      status: 'To Do',
+      priority: 'Medium',
+      due_date: ''
+    });
+  }
+}, [task, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -63,7 +65,7 @@ const TaskModal = ({ isOpen, task, projects, onClose, onSave, loading }) => {
             <label className="block text-gray-700 font-semibold mb-2">Title*</label>
             <input
               type="text"
-              value={formData.title}
+              value={formData.title || ''} // Add || '' here
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               required
@@ -73,7 +75,7 @@ const TaskModal = ({ isOpen, task, projects, onClose, onSave, loading }) => {
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Description</label>
             <textarea
-              value={formData.description}
+              value={formData.description || ''} // Add || '' here
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               rows="2"
@@ -123,7 +125,7 @@ const TaskModal = ({ isOpen, task, projects, onClose, onSave, loading }) => {
             <label className="block text-gray-700 font-semibold mb-2">Due Date</label>
             <input
               type="date"
-              value={formData.due_date}
+              value={formData.due_date || ''} // Add || '' here
               onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
@@ -196,7 +198,7 @@ export default function Tasks() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [viewType, setViewType] = useState('kanban'); // kanban or list
+  const [viewType, setViewType] = useState('Visual Signal'); // visual signal or list
 
   useEffect(() => {
     fetchData();
@@ -267,12 +269,12 @@ export default function Tasks() {
         <h1 className="text-3xl font-bold text-gray-800">Tasks</h1>
           <div className="flex gap-4">
           <button
-            onClick={() => setViewType('kanban')}
+            onClick={() => setViewType('Visual Signal')}
             className={`px-4 py-2 rounded-lg font-semibold ${
-              viewType === 'kanban' ? 'bg-indigo-600 text-white' : 'bg-white border'
+              viewType === 'Visual Signal' ? 'bg-indigo-600 text-white' : 'bg-white border'
             }`}
           >
-            Kanban
+            Visual Signal
           </button>
           <button
             onClick={() => setViewType('list')}
@@ -298,7 +300,7 @@ export default function Tasks() {
 
       {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
 
-      {viewType === 'kanban' ? (
+      {viewType === 'Visual Signal' ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {tasksByStatus.map(column => (
             <div key={column.status} className="bg-gray-200 rounded-lg p-4">

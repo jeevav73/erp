@@ -29,18 +29,22 @@ export default function EmployeePortal() {
     }
   };
 
-  const handleStatusChange = async (taskId, newStatus) => {
-    try {
-      setUpdating(taskId);
-      await taskService.updateTask(taskId, { status: newStatus });
-      // Immediately refresh to show the update
-      await fetchTasks();
-    } catch (err) {
-      console.error('Failed to update task status', err);
-    } finally {
-      setUpdating(null);
-    }
-  };
+const handleStatusChange = async (taskId, newStatus) => {
+  try {
+    setUpdating(taskId);
+    // Log the data before sending to see if it's correct
+    console.log(`Sending: ID=${taskId}, Status=${newStatus}`);
+    
+    await taskService.updateTask(taskId, { status: newStatus });
+    await fetchTasks();
+  } catch (err) {
+    // Detailed error logging
+    console.error('Full Error:', err.response?.data || err.message);
+    alert("Update failed: " + (err.response?.data?.message || "Check console"));
+  } finally {
+    setUpdating(null);
+  }
+};
 
   const getStatusIcon = (status) => {
     switch(status) {
